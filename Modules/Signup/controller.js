@@ -36,7 +36,7 @@ exports.add_user = async (req, res) => {
             user.save().then((data) => {
               var userDetails = {
                 _id: new Object(data._id),
-                user_name: req.body.user_mail,
+                user_name: req.body.user_name,
                 user_mail: req.body.user_mail,
                 user_phoneno: req.body.user_phoneno,
               };
