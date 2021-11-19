@@ -111,18 +111,60 @@ exports.order_product = (req, res) => {
     });
 };
 
-exports.view_order = (req, res) => {
-  User.find({ user_mail: req.query.user_mail }).then(async (order) => {
-    if (order.length < 1) {
-      res.status(409).json({
-        success: false,
-        message: "No orders found!",
-      });
-    } else {
-      res.status(200).json({
-        success: true,
-        message: order,
-      });
-    }
-  });
+exports.view_order = async (req, res) => {
+  // var response = {
+  //   userData: "",
+  //   productData: { productDetails: "", orderQuantity: null },
+  // };
+  // await User.find({ user_mail: req.query.user_mail }).then((userData) => {
+  //   response.userData = userData;
+  //   userData[0].orderId.forEach(async (id) => {
+  //     await Order.findById({ _id: id }).then(async (data) => {
+  //       response.productData.orderQuantity = data.order_quantity;
+  //       await Product.findById({ _id: data.products.product_id }).then(
+  //         (productData) => {
+  //           response.productData.productDetails = productData;
+  //         }
+  //       );
+  //     });
+  //   });
+  // });
+  User.aggregate([
+    {
+      $match: {
+        user_mail: req.query.user_mail,
+      },
+    },
+    {
+      $lookup: {
+        from: "orders",
+        localField: "orderId",
+        foreignField: "_id",
+        as: "orderId",
+      },
+    },
+    {
+      $project: {
+        "orderId._id": 0,
+        "orderId.customer_id": 0,
+      },
+    },
+    {
+      $lookup: {
+        from: "products",
+        localField: "orderId.products.product_id",
+        foreignField: "_id",
+        as: "orderId.products",
+      },
+    },
+  ]).then((data) =>
+    res.status(200).json({
+      success: true,
+      message: data,
+    })
+  );
+  // res.status(200).json({
+  //   success: true,
+  //   message: response,
+  // });
 };
