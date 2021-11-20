@@ -1,10 +1,10 @@
 const mongoose = require("mongoose");
 
-require("./order_schema");
 require("./product_schema");
+require("../Signup/user_details_schema")
 
 const Product = mongoose.model("product");
-const Order = mongoose.model("order");
+const User = mongoose.model("user_details");
 
 exports.add_product = (req, res) => {
   Product.find({ product_name: req.body.product_name })
@@ -37,17 +37,33 @@ exports.add_product = (req, res) => {
 };
 
 exports.view_orders = (req, res) => {
-  Order.find({}).then(async (order) => {
-    if (order.length < 1) {
-      res.status(409).json({
-        success: false,
-        message: "No orders found!",
-      });
-    } else {
-      res.status(200).json({
-        success: true,
-        message: order,
-      });
-    }
-  });
+  User.aggregate([
+    {
+      $lookup: {
+        from: "orders",
+        localField: "orderId",
+        foreignField: "_id",
+        as: "orderId",
+      },
+    },
+    {
+      $project: {
+        "orderId._id": 0,
+        "orderId.customer_id": 0,
+      },
+    },
+    {
+      $lookup: {
+        from: "products",
+        localField: "orderId.products.product_id",
+        foreignField: "_id",
+        as: "products",
+      },
+    },
+  ]).then((data) =>
+    res.status(200).json({
+      success: true,
+      message: data,
+    })
+  );
 };

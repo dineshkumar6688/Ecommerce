@@ -27,7 +27,7 @@ exports.user_login = async (req, res, next) => {
           user[0].user_password,
           (err, result) => {
             if (err) {
-              res.status(401).json({
+              res.status(500).json({
                 success: false,
                 message: err,
               });
